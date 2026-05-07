@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+from pathlib import Path
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -12,13 +13,15 @@ from sklearn.metrics import (
     classification_report,
     roc_auc_score,
     roc_curve,
-    RocCurveDisplay
+    RocCurveDisplay,
 )
 
-df = pd.read_csv(r"C:\Users\Owner\Desktop\Python\Telco_data\data\WA_Fn-UseC_-Telco-Customer-Churn.csv")
+base_path = Path(__file__).parent.parent
+file_path = base_path / "data/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+df = pd.read_csv(file_path)
 
 # Convert TotalCharges from string to numeric
-df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors='coerce')
+df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
 
 # Find the rows with NaN
 # print(df[df["TotalCharges"].isnull()].index)
@@ -42,15 +45,17 @@ numerical_cols = X.select_dtypes(include=["int64", "float64"]).columns
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), numerical_cols),
-        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols)
-        ]
-    )
+        ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
+    ]
+)
 
 # Model pipeline
-model = Pipeline([
-    ("preprocessing", preprocessor),
-    ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced"))
-])
+model = Pipeline(
+    [
+        ("preprocessing", preprocessor),
+        ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced")),
+    ]
+)
 
 # Cross validate the model
 # As there are much more non-churners than churners in the dataset, stratify
@@ -61,18 +66,12 @@ print("Mean ROC-AUC:", scores.mean())
 
 # Split the data into training data and testing data
 X_train_full, X_test, y_train_full, y_test = train_test_split(
-    X, y, 
-    test_size=0.2, 
-    random_state=42, 
-    stratify=y
-    )
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
 
 # Split the training data into training and validation data
 X_train, X_val, y_train, y_val = train_test_split(
-    X_train_full, y_train_full,
-    test_size=0.25,
-    random_state=42,
-    stratify=y_train_full
+    X_train_full, y_train_full, test_size=0.25, random_state=42, stratify=y_train_full
 )
 
 # Train model
@@ -114,10 +113,7 @@ coefs = clf.coef_[0]
 feature_names = model.named_steps["preprocessing"].get_feature_names_out()
 
 # Build a table with names and coefficients, order by size
-coef_df = pd.DataFrame({
-    "feature": feature_names,
-    "coefficient": coefs
-})
+coef_df = pd.DataFrame({"feature": feature_names, "coefficient": coefs})
 
 # Make a second column with the absolute value of the coefficients
 coef_df["abs_coef"] = coef_df["coefficient"].abs()
