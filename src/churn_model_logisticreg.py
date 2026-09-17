@@ -32,7 +32,7 @@ df = df.dropna()
 # Change categories for logit regression, if churn is yes, change to 1, if churn is no, change to 0
 df["Churn"] = df["Churn"].map({"Yes": 1, "No": 0})
 
-# Split features and target, X will be table of features, Y the target
+# Split features and target, X will be table of features, y the target
 # As totalcharges = monthlycharges x tenure, we have multicollinearity, so we'll drop one, total charges
 X = df.drop(["Churn", "customerID", "TotalCharges"], axis=1)
 y = df["Churn"]
